@@ -593,7 +593,7 @@ module.exports = unary = function(fn) {
 };
 
 },{"./n-ary":14}],21:[function(require,module,exports){
-var FuncCtor, codeToEval, ctx, eff, funcProto, i, isOtherFunc, isRegFunc, key, makeArgString, makeWrapperCode, val, vm, waterhouse, wrap, wrapToLength, wrappers, _fn, _i, _j;
+var FuncCtor, codeToEval, ctx, eff, funcProto, i, isOtherFunc, isRegFunc, key, makeArgString, makeWrapperCode, val, vm, waterhouse, wrap, wrapToLength, wrappers, _fn, _i;
 
 vm = require("vm");
 
@@ -635,9 +635,14 @@ funcProto = ctx.funcProto;
 
 FuncCtor = ctx.FuncCtor;
 
-for (i = _j = 0; _j <= 10; i = ++_j) {
-  wrappers = ctx["wrap" + i];
-}
+wrappers = (function() {
+  var _j, _results;
+  _results = [];
+  for (i = _j = 0; _j <= 10; i = ++_j) {
+    _results.push(ctx["wrap" + i]);
+  }
+  return _results;
+})();
 
 isOtherFunc = function(fn) {
   return typeof fn === "function" && fn instanceof FuncCtor;
@@ -692,10 +697,10 @@ waterhouse.FuncCtor = FuncCtor;
 
 _fn = function(key, val) {
   return funcProto[key] = function() {
-    var arg, args, _k, _len;
+    var arg, args, _j, _len;
     args = new Array(arguments.length + 1);
     args[0] = this;
-    for (i = _k = 0, _len = arguments.length; _k < _len; i = ++_k) {
+    for (i = _j = 0, _len = arguments.length; _j < _len; i = ++_j) {
       arg = arguments[i];
       args[i + 1] = arg;
     }
