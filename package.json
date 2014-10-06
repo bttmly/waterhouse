@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --compilers coffee:coffee-script/register ./test/test.coffee -R spec",
+    "compile": "coffee -o ./lib -cb ./src",
+    "build": "browserify -s waterhouse -o ./dist/index.js ./src/index.coffee",
+    "watch": "watchify -s waterhouse -o ./dist/index.js ./src/index.coffee"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "eff": "^0.1.1",
-    "poser": "^1.1.5"
+    "eff": "^0.1.1"
   },
   "browserify": {
     "transform": [
@@ -18,6 +20,11 @@
     ]
   },
   "devDependencies": {
-    "coffeeify": "^0.7.0"
+    "browserify": "^6.0.2",
+    "chai": "^1.9.2",
+    "coffee-script": "^1.8.0",
+    "coffeeify": "^0.7.0",
+    "mocha": "^1.21.4",
+    "watchify": "^1.0.6"
   }
 }

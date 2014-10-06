@@ -20,35 +20,53 @@ codeToEval += "var funcProto = Function.prototype;"
 codeToEval += "var FuncCtor = Function;"
 
 ctx = vm.createContext()
-code = vm.createScript( codeToEval )
-code.runInContext( ctx )
-proto = ctx.funcProto
+vm.runInContext( codeToEval, ctx )
+funcProto = ctx.funcProto
+FuncCtor = ctx.FuncCtor
 
-wrappers = {}
-for i in [0..10]
-  wrappers[i] = ctx["wrap#{ i }"]
+wrappers = ( ctx["wrap#{ i }"] for i in [0..10] )
+
+isOtherFunc = ( fn ) ->
+  typeof fn is "function" and fn instanceof FuncCtor
+
+isRegFunc = ( fn ) ->
+  typeof fn is "function" and fn instanceof Function
+
 
 wrap = ( fn ) ->
   unless wrappers[fn.length]
     throw new RangeError "That function takes too many damn arguments"
   wrappers[fn.length] fn
 
-wrapLen = ( len, fn ) ->
+wrapToLength = ( len, fn ) ->
   unless wrappers[len]
     throw new RangeError "That length isn't gonna work"
   wrappers[len] fn
 
 waterhouse = ( fn ) ->
   wrapped = wrap( fn )
-  wrapLen fn.length, ->
+  wrapToLength fn.length, ->
     ret = wrapped.apply this, arguments
-    if typeof ret is "function" and not ret instanceof FuncCtor
-      wrap ret
-    ret
+    if isRegFunc( ret ) then wrap( ret ) else ret
 
 waterhouse.extend = ( methods ) ->
   for key, val of methods
     do ( key, val ) ->
-      proto[key] = val
+      funcProto[key] = if isRegFunc( val ) then wrap( val ) else val
+  return
+
+waterhouse.funcProto = funcProto
+waterhouse.FuncCtor = FuncCtor
+
+for key, val of eff
+  do ( key, val ) ->
+    funcProto[key] = ->
+      args = new Array arguments.length + 1
+      args[0] = this
+      args[i + 1] = arg for arg, i in arguments
+      val.apply null, args
+
+console.log Object.keys wrappers
+
 
 module.exports = waterhouse
