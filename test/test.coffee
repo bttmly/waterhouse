@@ -1,6 +1,6 @@
 expect = require( "chai" ).expect
 
-w = require "../src/index.coffee"
+w = require ".."
 
 fnWithClosure = do ->
   x = 5

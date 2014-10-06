@@ -2,22 +2,17 @@
   "name": "waterhouse",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "scripts": {
     "test": "mocha --compilers coffee:coffee-script/register ./test/test.coffee -R spec",
     "compile": "coffee -o ./lib -cb ./src",
-    "build": "browserify -s waterhouse -o ./test/browser.js ./src/index.coffee",
-    "watch": "watchify -s waterhouse -o ./test/browser.js ./src/index.coffee"
+    "build": "browserify -s waterhouse -o ./test/browser.js ./index.js",
+    "watch": "watchify -s waterhouse -o ./test/browser.js ./index.js"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "eff": "^0.1.1"
-  },
-  "browserify": {
-    "transform": [
-      "coffeeify"
-    ]
   },
   "devDependencies": {
     "browserify": "^6.0.2",
