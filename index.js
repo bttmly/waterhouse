@@ -75,7 +75,10 @@ range.forEach( function ( i ) {
 });
 
 Object.keys( effNoop ).forEach( function ( key ) {
-  funcProto[key] = wrap( effNoop[key] );
+  funcProto[key] = wrapToLength( effNoop[key].length, function () {
+    var ret = effNoop[key].apply( this, arguments );
+    return isRegFunc( ret ) ? wrap( ret ) : ret;
+  });
 });
 
 var waterhouse = module.exports = function ( fn ) {
