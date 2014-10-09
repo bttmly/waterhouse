@@ -82,9 +82,9 @@ Object.keys( effNoop ).forEach( function ( key ) {
 });
 
 var waterhouse = module.exports = function ( fn ) {
-  var wrapped = wrap( fn );
+  // var wrapped = wrap( fn );
   return wrapToLength( fn.length, function () {
-    var ret = wrapped.apply( this, arguments );
+    var ret = fn.apply( this, arguments );
     return isRegFunc( ret ) ? wrap( ret ) : ret;
   });
 };
