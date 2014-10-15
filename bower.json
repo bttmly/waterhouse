@@ -1,0 +1,27 @@
+{
+  "name": "waterhouse",
+  "version": "0.0.0",
+  "homepage": "https://github.com/nickb1080/waterhouse",
+  "authors": [
+    "Nick Bottomley <nhbottomley@gmail.com>"
+  ],
+  "moduleType": [
+    "node"
+  ],
+  "keywords": [
+    "function",
+    "decorator",
+    "extensible"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "mocha": "~1.21.4"
+  }
+}

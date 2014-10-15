@@ -15,32 +15,26 @@ var extend = function ( target, source ) {
 };
 
 var makeArgString = function ( n ) {
-  if ( n === 0 ) {
-    return "";
-  }
-  var args = [];
+  var ret = [];
   var i = -1;
-  while ( ++i < n - 1 ) {
-    args.push( String.fromCharCode( i % 26 + 97 ) );
+  while ( ++i < n ) {
+    ret.push( String.fromCharCode( i % 26 + 97 ) );
   }
-  return args.join( ', ' );
+  return ret.join( ', ' );
 };
 
 var makeWrapperCode = function ( n ) {
-  var args = makeArgString( n );
   return [
     'var wrap',
     String( n ).toUpperCase(),
     '= function (fn) { return function (',
-    args,
+    makeArgString( n ),
     ') { return fn.apply(this, arguments); }; };'
   ].join( '' );
 };
 
-var code = 'var funcProto = Function.prototype, FuncCtor = Function;';
-range.forEach( function ( i ) {
-  code += makeWrapperCode( i );
-});
+var code = range.map( makeWrapperCode ).join( '' ) +
+  'var funcProto = Function.prototype, FuncCtor = Function;';
 
 var context = vm.createContext();
 vm.runInContext( code, context );
