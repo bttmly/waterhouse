@@ -41,6 +41,10 @@ vm.runInContext( code, context );
 var funcProto = context.funcProto;
 var FuncCtor = context.FuncCtor;
 
+var wrappers = range.map( function ( i ) {
+  return context["wrap" + i]
+});
+
 var isOtheFunc = function ( fn ) {
   return ( typeof fn === "function" ) && ( fn instanceof FuncCtor );
 };
@@ -51,7 +55,6 @@ var isRegFunc = function ( fn ) {
 
 var wrap = function ( fn ) {
   if ( !wrappers[fn.length] ) {
-    console.log(fn.length);
     throw new RangeError( "Function takes too many arguments." );
   }
   return wrappers[fn.length]( fn );
@@ -64,24 +67,19 @@ var wrapToLength = function ( len, fn ) {
   return wrappers[len]( fn );
 };
 
-range.forEach( function ( i ) {
-  wrappers[i] = context["wrap" + i];
-});
-
-Object.keys( effNoop ).forEach( function ( key ) {
-  funcProto[key] = wrapToLength( effNoop[key].length, function () {
-    var ret = effNoop[key].apply( this, arguments );
-    return isRegFunc( ret ) ? wrap( ret ) : ret;
-  });
-});
-
 var waterhouse = module.exports = function ( fn ) {
-  // var wrapped = wrap( fn );
   return wrapToLength( fn.length, function () {
     var ret = fn.apply( this, arguments );
-    return isRegFunc( ret ) ? wrap( ret ) : ret;
+    if ( isRegFunc( ret ) ) {
+      return waterhouse( ret )
+    }
+    return ret;
   });
 };
+
+Object.keys( effNoop ).forEach( function ( key ) {
+  funcProto[key] = waterhouse( effNoop[key] );
+});
 
 extend( waterhouse, {
   FuncCtor: FuncCtor,

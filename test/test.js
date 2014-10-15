@@ -59,7 +59,7 @@ describe("wrapping function", function () {
 describe("methods", function () {
 
   describe("curry", function () {
-    xit("should curry the function", function () {
+    it("should curry the function", function () {
       var cur, cur_1, cur_1_2, cur_1_2_3, wrapAdd;
       wrapAdd = w(addThree);
       cur = wrapAdd.curry();
@@ -74,7 +74,7 @@ describe("methods", function () {
   });
 
   describe("partial", function () {
-    xit("should partially apply the function", function () {
+    it("should partially apply the function", function () {
       var par_1, par_1_2, par_1_2_3;
       par_1 = w(addThree).partial(1);
       expect(isWaterhouse(par_1)).to.equal(true);
