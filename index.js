@@ -1,5 +1,5 @@
-var vm = require( 'vm' );
-var eff = require( 'eff' );
+var vm = require( "vm" );
+var eff = require( "eff" );
 
 var wrappers = {};
 
@@ -7,10 +7,13 @@ var range = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 var effNoop = eff( function() {} );
 
-var extend = function ( target, source ) {
-  Object.keys( source ).forEach( function ( key ) {
-    target[key] = source[key];
-  });
+var extend = function ( target ) {
+  var sources = [].slice.call( arguments, 1 );
+  sources.forEach( function ( source) {
+    Object.keys( source ).forEach( function ( key ) {
+      target[key] = source[key];
+    });
+  })
   return target;
 };
 
@@ -20,21 +23,21 @@ var makeArgString = function ( n ) {
   while ( ++i < n ) {
     ret.push( String.fromCharCode( i % 26 + 97 ) );
   }
-  return ret.join( ', ' );
+  return ret.join( ", " );
 };
 
 var makeWrapperCode = function ( n ) {
   return [
-    'var wrap',
+    "var wrap",
     String( n ).toUpperCase(),
-    '= function (fn) { return function (',
+    "= function (fn) { return function (",
     makeArgString( n ),
-    ') { return fn.apply(this, arguments); }; };'
-  ].join( '' );
+    ") { return fn.apply(this, arguments); }; };"
+  ].join( "" );
 };
 
-var code = range.map( makeWrapperCode ).join( '' ) +
-  'var funcProto = Function.prototype, FuncCtor = Function;';
+var code = range.map( makeWrapperCode ).join( "" ) +
+  "var funcProto = Function.prototype, FuncCtor = Function;";
 
 var context = vm.createContext();
 vm.runInContext( code, context );
@@ -77,11 +80,23 @@ var waterhouse = module.exports = function ( fn ) {
   });
 };
 
+var methods = {};
+
 Object.keys( effNoop ).forEach( function ( key ) {
   funcProto[key] = waterhouse( effNoop[key] );
+
+  methods[key] = function ( fn ) {
+    var args = new Array( arguments.length - 1 );
+    for ( var i = 1; i < arguments.length; i++ ) {
+      args[i - 1] = arguments[i];
+    }
+    var w = waterhouse( fn );
+    return w[key].apply( w, args );
+  };
+
 });
 
-extend( waterhouse, {
+extend( waterhouse, methods, {
   FuncCtor: FuncCtor,
   funcProto: funcProto,
   extend: function ( source ) {

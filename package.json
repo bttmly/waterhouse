@@ -5,6 +5,7 @@
   "main": "./lib/index.js",
   "scripts": {
     "test": "mocha ./test/test.js -R spec",
+    "watch-test": "mocha ./test/test.js -R min --watch",
     "build": "npm run build-lib; npm run build-test",
     "watch": "watchify -s waterhouse -o ./test/browser.js ./index.js",
     "build-lib": "browserify -s waterhouse -o ./test/browser.js ./index.js",
