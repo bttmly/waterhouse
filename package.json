@@ -1,17 +1,18 @@
 {
   "name": "waterhouse",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "./lib/index.js",
+  "repository": "https://github.com/nickb1080/waterhouse.git",
   "scripts": {
     "test": "mocha ./test/test.js -R spec",
     "watch-test": "mocha ./test/test.js -R min --watch",
     "build": "npm run build-lib; npm run build-test",
-    "watch": "watchify -s waterhouse -o ./test/browser.js ./index.js",
-    "build-lib": "browserify -s waterhouse -o ./test/browser.js ./index.js",
+    "watch": "watchify -s waterhouse -o ./dist/waterhouse.js ./index.js",
+    "build-lib": "browserify -s waterhouse -o ./dist/waterhouse.js ./index.js",
     "build-test": "browserify -s waterhouse -o ./test/browser-test.js ./test/test.js"
   },
-  "author": "",
+  "author": "Nick Bottomley (github.com/nickb1080)",
   "license": "MIT",
   "dependencies": {
     "eff": "^0.1.1"
@@ -22,6 +23,7 @@
     "coffee-script": "^1.8.0",
     "coffeeify": "^0.7.0",
     "mocha": "^1.21.4",
+    "testling": "^1.7.1",
     "watchify": "^1.0.6"
   }
 }

@@ -1,6 +1,6 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.waterhouse=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var vm = require( 'vm' );
-var eff = require( 'eff' );
+var vm = require( "vm" );
+var eff = require( "eff" );
 
 var wrappers = {};
 
@@ -8,45 +8,46 @@ var range = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 var effNoop = eff( function() {} );
 
-var extend = function ( target, source ) {
-  Object.keys( source ).forEach( function ( key ) {
-    target[key] = source[key];
-  });
+var extend = function ( target ) {
+  var sources = [].slice.call( arguments, 1 );
+  sources.forEach( function ( source) {
+    Object.keys( source ).forEach( function ( key ) {
+      target[key] = source[key];
+    });
+  })
   return target;
 };
 
 var makeArgString = function ( n ) {
-  if ( n === 0 ) {
-    return "";
-  }
-  var args = [];
+  var ret = [];
   var i = -1;
-  while ( ++i < n - 1 ) {
-    args.push( String.fromCharCode( i % 26 + 97 ) );
+  while ( ++i < n ) {
+    ret.push( String.fromCharCode( i % 26 + 97 ) );
   }
-  return args.join( ', ' );
+  return ret.join( ", " );
 };
 
 var makeWrapperCode = function ( n ) {
-  var args = makeArgString( n );
   return [
-    'var wrap',
+    "var wrap",
     String( n ).toUpperCase(),
-    '= function (fn) { return function (',
-    args,
-    ') { return fn.apply(this, arguments); }; };'
-  ].join( '' );
+    "= function (fn) { return function (",
+    makeArgString( n ),
+    ") { return fn.apply(this, arguments); }; };"
+  ].join( "" );
 };
 
-var code = 'var funcProto = Function.prototype, FuncCtor = Function;';
-range.forEach( function ( i ) {
-  code += makeWrapperCode( i );
-});
+var code = range.map( makeWrapperCode ).join( "" ) +
+  "var funcProto = Function.prototype, FuncCtor = Function;";
 
 var context = vm.createContext();
 vm.runInContext( code, context );
 var funcProto = context.funcProto;
 var FuncCtor = context.FuncCtor;
+
+var wrappers = range.map( function ( i ) {
+  return context["wrap" + i]
+});
 
 var isOtheFunc = function ( fn ) {
   return ( typeof fn === "function" ) && ( fn instanceof FuncCtor );
@@ -58,7 +59,6 @@ var isRegFunc = function ( fn ) {
 
 var wrap = function ( fn ) {
   if ( !wrappers[fn.length] ) {
-    console.log(fn.length);
     throw new RangeError( "Function takes too many arguments." );
   }
   return wrappers[fn.length]( fn );
@@ -71,26 +71,33 @@ var wrapToLength = function ( len, fn ) {
   return wrappers[len]( fn );
 };
 
-range.forEach( function ( i ) {
-  wrappers[i] = context["wrap" + i];
-});
-
-Object.keys( effNoop ).forEach( function ( key ) {
-  funcProto[key] = wrapToLength( effNoop[key].length, function () {
-    var ret = effNoop[key].apply( this, arguments );
-    return isRegFunc( ret ) ? wrap( ret ) : ret;
-  });
-});
-
 var waterhouse = module.exports = function ( fn ) {
-  // var wrapped = wrap( fn );
   return wrapToLength( fn.length, function () {
     var ret = fn.apply( this, arguments );
-    return isRegFunc( ret ) ? wrap( ret ) : ret;
+    if ( isRegFunc( ret ) ) {
+      return waterhouse( ret )
+    }
+    return ret;
   });
 };
 
-extend( waterhouse, {
+var methods = {};
+
+Object.keys( effNoop ).forEach( function ( key ) {
+  funcProto[key] = waterhouse( effNoop[key] );
+
+  methods[key] = function ( fn ) {
+    var args = new Array( arguments.length - 1 );
+    for ( var i = 1; i < arguments.length; i++ ) {
+      args[i - 1] = arguments[i];
+    }
+    var w = waterhouse( fn );
+    return w[key].apply( w, args );
+  };
+
+});
+
+extend( waterhouse, methods, {
   FuncCtor: FuncCtor,
   funcProto: funcProto,
   extend: function ( source ) {
@@ -6545,6 +6552,7 @@ module.exports = unary = function(fn) {
 
 },{"./n-ary":51}],58:[function(require,module,exports){
 var expect = require("chai").expect;
+require("chai").should();
 
 var w = require("..");
 
@@ -6586,9 +6594,30 @@ var isWaterhouse = function (fn) {
   return false;
 };
 
+
+
+var curryTest = function ( curried ) {
+  it("should curry the function", function () {
+    cur = curried;
+    cur_1 = cur(1);
+    cur_1_2 = cur(1)(2);
+    cur_1_2_3 = cur(1)(2)(3);
+    isWaterhouse(cur).should.equal(true);
+    isWaterhouse(cur_1).should.equal(true);
+    isWaterhouse(cur_1_2).should.equal(true);
+    expect(cur_1_2_3).to.equal(6);
+  });
+};
+
 describe("wrapping function", function () {
 
-  it("should work", function () {
+  var i = 0;
+
+  afterEach(function () {
+    console.log(++i);
+  });
+
+  it("should preserve function's original scope", function () {
     var wrapped;
     wrapped = w(fnWithClosure);
     expect(wrapped()).to.equal(5);
@@ -6597,40 +6626,74 @@ describe("wrapping function", function () {
   it("should create wrapped functions", function () {
     var wrapped;
     wrapped = w(fnWithClosure);
-    expect(isWaterhouse(wrapped)).to.equal(true);
+    isWaterhouse(wrapped).should.equal(true);
   });
 
 });
 
-describe("methods", function () {
+
+describe("static methods", function () {
+  describe("curry", function () {
+    curryTest(w.curry(addThree));
+  });
+
+});
+
+describe("prototype methods", function () {
 
   describe("curry", function () {
-    xit("should curry the function", function () {
-      var cur, cur_1, cur_1_2, cur_1_2_3, wrapAdd;
-      wrapAdd = w(addThree);
-      cur = wrapAdd.curry();
-      cur_1 = cur(1);
-      cur_1_2 = cur(1)(2);
-      cur_1_2_3 = cur(1)(2)(3);
-      expect(isWaterhouse(cur)).to.equal(true);
-      expect(isWaterhouse(cur_1)).to.equal(true);
-      expect(isWaterhouse(cur_1_2)).to.equal(true);
-      expect(cur_1_2_3).to.equal(6);
-    });
+    curryTest(w(addThree).curry());
   });
 
   describe("partial", function () {
-    xit("should partially apply the function", function () {
+    it("should partially apply the function", function () {
       var par_1, par_1_2, par_1_2_3;
       par_1 = w(addThree).partial(1);
-      expect(isWaterhouse(par_1)).to.equal(true);
-      expect(par_1(2, 3)).to.equal(6);
+      isWaterhouse(par_1).should.to.equal(true);
+      par_1(2, 3).should.to.equal(6);
       par_1_2 = w(addThree).partial(1, 2);
-      expect(isWaterhouse(par_1_2)).to.equal(true);
-      expect(par_1_2(3)).to.equal(6);
+      isWaterhouse(par_1_2).should.to.equal(true);
+      par_1_2(3).should.to.equal(6);
       par_1_2_3 = w(addThree).partial(1, 2, 3);
-      expect(isWaterhouse(par_1_2_3)).to.equal(true);
-      expect(par_1_2_3()).to.equal(6);
+      isWaterhouse(par_1_2_3).should.to.equal(true);
+      par_1_2_3().should.to.equal(6);
+    });
+  });
+
+  describe("flip", function () {
+    it("should flip the first two arguments of the function", function () {
+      var wrapAdd;
+      wrapAdd = w(addThree);
+      expect(isWaterhouse(wrapAdd.flip())).to.equal(true);
+      expect(wrapAdd.flip()("a", "b", "c")).to.equal("bac");
+    });
+  });
+
+  describe("unary", function () {
+    it("should create a function that takes one argument", function () {
+      var wrapAdd2 = w(addTwo);
+      isWaterhouse(wrapAdd2.unary()).should.equal(true);
+      wrapAdd2.unary()("a", "b").should.equal("aundefined");
+    });
+  });
+
+  describe("binary", function () {
+    it("should create a function that takes two arguments", function () {
+      var wrapAdd3 = w(addThree);
+      isWaterhouse(wrapAdd3.binary()).should.equal(true);
+      wrapAdd3.binary()("a", "b", "c").should.equal("abundefined");
+    });
+  });
+
+  describe("demethodize", function () {
+    it("should demethodize a function", function () {
+      var map = w([].map).demethodize();
+      var timesTwo = function (e) { return e * 2; };
+      isWaterhouse(map).should.equal(true);
+      isWaterhouse(map.partial([1, 2, 3])).should.equal(true);
+      map.partial([1, 2, 3])(timesTwo).should.deep.equal([2, 4, 6]);
+      isWaterhouse(map.flip().partial()).should.equal(true);
+      map.flip().partial(timesTwo)([1, 2, 3]).should.deep.equal([2, 4, 6]);
     });
   });
 

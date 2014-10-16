@@ -41,6 +41,8 @@ var isWaterhouse = function (fn) {
   return false;
 };
 
+
+
 var curryTest = function ( curried ) {
   it("should curry the function", function () {
     cur = curried;
@@ -55,6 +57,12 @@ var curryTest = function ( curried ) {
 };
 
 describe("wrapping function", function () {
+
+  var i = 0;
+
+  afterEach(function () {
+    console.log(++i);
+  });
 
   it("should preserve function's original scope", function () {
     var wrapped;
