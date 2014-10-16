@@ -1,4 +1,4 @@
-# Waterhouse
+# waterhouse [![Build Status](https://travis-ci.org/nickb1080/waterhouse.svg?branch=master)](https://travis-ci.org/nickb1080/waterhouse)
 
 Proof-of-concept using and creating functions from another execution context. 
 
