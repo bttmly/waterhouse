@@ -41,8 +41,6 @@ var isWaterhouse = function (fn) {
   return false;
 };
 
-
-
 var curryTest = function ( curried ) {
   it("should curry the function", function () {
     cur = curried;
@@ -56,12 +54,67 @@ var curryTest = function ( curried ) {
   });
 };
 
+var partialTest = function (partialedAddThree) {
+  it("should partially apply the function", function () {
+    par_1 = partialedAddThree;
+    isWaterhouse(par_1).should.to.equal(true);
+    par_1(2, 3).should.to.equal(6);
+    par_1_2 = w(addThree).partial(1, 2);
+    isWaterhouse(par_1_2).should.to.equal(true);
+    par_1_2(3).should.to.equal(6);
+    par_1_2_3 = w(addThree).partial(1, 2, 3);
+    isWaterhouse(par_1_2_3).should.to.equal(true);
+    par_1_2_3().should.to.equal(6);
+  });
+};
+
+var flipTest = function (flippedAddThree) {
+  it("should flip the first two arguments of the function", function () {
+    isWaterhouse(flippedAddThree).should.equal(true);
+    flippedAddThree("a", "b", "c").should.equal("bac");
+  });
+};
+
+var unaryTest = function (unariedAddTwo) {
+  it("should create a function that takes one argument", function () {
+    isWaterhouse(unariedAddTwo).should.equal(true);
+    unariedAddTwo("a", "b").should.equal("aundefined");
+  });
+};
+
+var binaryTest = function (binariedAddThree) {
+  it("should create a function that takes two arguments", function () {
+    isWaterhouse(binariedAddThree).should.equal(true);
+    binariedAddThree("a", "b", "c").should.equal("abundefined");
+  });
+};
+
+var demethodizeTest = function (demethodizedMap) {
+  it("should demethodize a function", function () {
+    // var map = w([].map).demethodize();
+    var timesTwo = function (e) { return e * 2; };
+    isWaterhouse(demethodizedMap).should.equal(true);
+    isWaterhouse(demethodizedMap.partial([1, 2, 3])).should.equal(true);
+    demethodizedMap.partial([1, 2, 3])(timesTwo).should.deep.equal([2, 4, 6]);
+    isWaterhouse(demethodizedMap.flip().partial()).should.equal(true);
+    demethodizedMap.flip().partial(timesTwo)([1, 2, 3]).should.deep.equal([2, 4, 6]);
+  });
+}
+
 describe("wrapping function", function () {
 
-  var i = 0;
+  it("should return a function(like) object", function () {
+    var wrapped;
+    wrapped = w(fnWithClosure);
+    Object.prototype.toString.call(wrapped).should.equal("[object Function]");
+    (typeof wrapped).should.equal("function");
+  });
 
-  afterEach(function () {
-    console.log(++i);
+  it("should not be an instance of regular Function", function () {
+    var wrapped;
+    wrapped = w(fnWithClosure);
+    (wrapped instanceof Function).should.equal(false);
+    isWaterhouse(wrapped).should.equal(true);
   });
 
   it("should preserve function's original scope", function () {
@@ -70,78 +123,57 @@ describe("wrapping function", function () {
     expect(wrapped()).to.equal(5);
   });
 
-  it("should create wrapped functions", function () {
-    var wrapped;
-    wrapped = w(fnWithClosure);
-    isWaterhouse(wrapped).should.equal(true);
-  });
 
 });
 
 
 describe("static methods", function () {
-  describe("curry", function () {
+  describe(".curry()", function () {
     curryTest(w.curry(addThree));
   });
-
+  describe(".partial()", function () {
+    partialTest(w.partial(addThree, 1));
+  });
+  describe(".flip()", function () {
+    flipTest(w.flip(addThree));
+  });
+  describe(".unary()", function () {
+    unaryTest(w.unary(addTwo));
+  });
+  describe(".binary()", function () {
+    binaryTest(w.binary(addThree));
+  });
+  describe(".demethodize()", function () {
+    demethodizeTest(w.demethodize([].map));
+  });
 });
 
 describe("prototype methods", function () {
 
-  describe("curry", function () {
+  describe("Waterhouse::curry", function () {
     curryTest(w(addThree).curry());
   });
 
-  describe("partial", function () {
-    it("should partially apply the function", function () {
-      var par_1, par_1_2, par_1_2_3;
-      par_1 = w(addThree).partial(1);
-      isWaterhouse(par_1).should.to.equal(true);
-      par_1(2, 3).should.to.equal(6);
-      par_1_2 = w(addThree).partial(1, 2);
-      isWaterhouse(par_1_2).should.to.equal(true);
-      par_1_2(3).should.to.equal(6);
-      par_1_2_3 = w(addThree).partial(1, 2, 3);
-      isWaterhouse(par_1_2_3).should.to.equal(true);
-      par_1_2_3().should.to.equal(6);
-    });
+  describe("Waterhouse::partial", function () {
+    partialTest(w.partial(addThree, 1));
   });
 
-  describe("flip", function () {
-    it("should flip the first two arguments of the function", function () {
-      var wrapAdd;
-      wrapAdd = w(addThree);
-      expect(isWaterhouse(wrapAdd.flip())).to.equal(true);
-      expect(wrapAdd.flip()("a", "b", "c")).to.equal("bac");
-    });
+  describe("Waterhouse::flip", function () {
+    flipTest(w(addThree).flip());
   });
 
-  describe("unary", function () {
-    it("should create a function that takes one argument", function () {
-      var wrapAdd2 = w(addTwo);
-      isWaterhouse(wrapAdd2.unary()).should.equal(true);
-      wrapAdd2.unary()("a", "b").should.equal("aundefined");
-    });
+  describe("Waterhouse::unary", function () {
+    unaryTest(w(addTwo).unary());
   });
 
-  describe("binary", function () {
-    it("should create a function that takes two arguments", function () {
-      var wrapAdd3 = w(addThree);
-      isWaterhouse(wrapAdd3.binary()).should.equal(true);
-      wrapAdd3.binary()("a", "b", "c").should.equal("abundefined");
-    });
+  describe("Waterhouse::binary", function () {
+    binaryTest(w(addThree).binary());
   });
 
-  describe("demethodize", function () {
-    it("should demethodize a function", function () {
-      var map = w([].map).demethodize();
-      var timesTwo = function (e) { return e * 2; };
-      isWaterhouse(map).should.equal(true);
-      isWaterhouse(map.partial([1, 2, 3])).should.equal(true);
-      map.partial([1, 2, 3])(timesTwo).should.deep.equal([2, 4, 6]);
-      isWaterhouse(map.flip().partial()).should.equal(true);
-      map.flip().partial(timesTwo)([1, 2, 3]).should.deep.equal([2, 4, 6]);
-    });
+  describe("Waterhouse::demethodize", function () {
+    demethodizeTest(w([].map).demethodize());
   });
+
+
 
 });
