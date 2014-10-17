@@ -128,24 +128,31 @@ describe("wrapping function", function () {
 
 
 describe("static methods", function () {
+
   describe(".curry()", function () {
     curryTest(w.curry(addThree));
   });
+
   describe(".partial()", function () {
     partialTest(w.partial(addThree, 1));
   });
+
   describe(".flip()", function () {
     flipTest(w.flip(addThree));
   });
+
   describe(".unary()", function () {
     unaryTest(w.unary(addTwo));
   });
+
   describe(".binary()", function () {
     binaryTest(w.binary(addThree));
   });
+
   describe(".demethodize()", function () {
     demethodizeTest(w.demethodize([].map));
   });
+
 });
 
 describe("prototype methods", function () {
@@ -173,7 +180,5 @@ describe("prototype methods", function () {
   describe("Waterhouse::demethodize", function () {
     demethodizeTest(w([].map).demethodize());
   });
-
-
 
 });
