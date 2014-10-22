@@ -5,7 +5,9 @@ var wrappers = {};
 
 var range = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-var effNoop = eff( function() {} );
+var noop = Function();
+
+var effed = eff( noop );
 
 var extend = function ( target ) {
   var sources = [].slice.call( arguments, 1 );
@@ -82,11 +84,50 @@ var waterhouse = module.exports = function ( fn ) {
 
 var methods = {};
 
-Object.keys( effNoop ).forEach( function ( key ) {
+noop.partialConstructor = function () {
+  var Ctor = this;
+  var outer = [].slice.call(arguments);
+  return function () {
+    var args = outer.concat([].slice.call(arguments));
+    var obj = Object.create(Ctor.prototype);
+    var result = Ctor.apply(obj, args);
+    if (result && (typeof result === "object" || typeof result === "function")) {
+      return result;
+    }
+    return obj;
+  }
+  // return eff.arity( func, Ctor.length - outer.length );
+};
+
+/*
+  len = arguments.length - 1
+  outer = new Array len
+  outer[i - 1] = arg for arg, i in arguments when i > 0
+  func = ->
+    outerLen = outer.length
+    len = arguments.length + outer.length
+    args = new Array len
+    args[i] = outerArg for outerArg, i in outer
+    args[outerLen + i] = arg for arg, i in arguments
+    obj = Object.create Ctor::
+    result = Ctor.apply obj, args
+    if result and typeof result is "object" or typeof result is "function"
+      result
+    else
+      obj
+  arity func, Ctor.length - outer.length
+*/
+
+
+Object.keys( effed ).forEach( function ( key ) {
   
-  if (key === "partialConstructor") return;
+  if (key === "partialConstructor") {
+    funcProto.partialConstructor = noop.partialConstructor;
+
+    return;
+  }
   
-  funcProto[key] = waterhouse( effNoop[key] );
+  funcProto[key] = waterhouse( effed[key] );
 
   methods[key] = function ( fn ) {
     var args = new Array( arguments.length - 1 );
@@ -94,8 +135,6 @@ Object.keys( effNoop ).forEach( function ( key ) {
       args[i - 1] = arguments[i];
     }
     var w = waterhouse( fn );
-
-
 
     return w[key].apply( w, args );
   };

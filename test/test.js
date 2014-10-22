@@ -81,9 +81,15 @@ var partialTest = function (partialedAddThree) {
 var partialConstructorTest = function (PartialedPerson) {
   it("should partially apply the constructor", function () {
     var jane = new PartialedPerson("Jane", 30);
+
+    console.log(Object.getOwnPropertyNames(Object.getPrototypeOf(jane)));
+
+
     expect(jane.gender).to.equal("female");
+    expect(jane instanceof Person).to.equal(true);
     expect(jane.getName).to.be.a("function");
-    Object.getPrototypeOf(jane);
+    
+
   });
 };
 
@@ -188,7 +194,7 @@ describe("prototype methods", function () {
     partialTest(w.partial(addThree, 1));
   });
 
-  describe("Waterhosue::patialConstructor", function () {
+  describe("Waterhouse::patialConstructor", function () {
     return;
     partialConstructorTest(w(Person).partialConstructor("female"));
   });
