@@ -3,6 +3,16 @@ require("chai").should();
 
 var w = require("..");
 
+function Person (gender, name, age) {
+  this.gender = gender;
+  this.name = name;
+  this.age = age;
+}
+
+Person.prototype.getName = function () {
+  return this.name;
+};
+
 var fnWithClosure = (function() {
   var x;
   x = 5;
@@ -68,6 +78,15 @@ var partialTest = function (partialedAddThree) {
   });
 };
 
+var partialConstructorTest = function (PartialedPerson) {
+  it("should partially apply the constructor", function () {
+    var jane = new PartialedPerson("Jane", 30);
+    expect(jane.gender).to.equal("female");
+    expect(jane.getName).to.be.a("function");
+    Object.getPrototypeOf(jane);
+  });
+};
+
 var flipTest = function (flippedAddThree) {
   it("should flip the first two arguments of the function", function () {
     isWaterhouse(flippedAddThree).should.equal(true);
@@ -91,7 +110,6 @@ var binaryTest = function (binariedAddThree) {
 
 var demethodizeTest = function (demethodizedMap) {
   it("should demethodize a function", function () {
-    // var map = w([].map).demethodize();
     var timesTwo = function (e) { return e * 2; };
     isWaterhouse(demethodizedMap).should.equal(true);
     isWaterhouse(demethodizedMap.partial([1, 2, 3])).should.equal(true);
@@ -137,6 +155,11 @@ describe("static methods", function () {
     partialTest(w.partial(addThree, 1));
   });
 
+  describe(".partialConstructor()", function () {
+    return;
+    partialConstructorTest(w.partialConstructor("female"));
+  });
+
   describe(".flip()", function () {
     flipTest(w.flip(addThree));
   });
@@ -165,6 +188,11 @@ describe("prototype methods", function () {
     partialTest(w.partial(addThree, 1));
   });
 
+  describe("Waterhosue::patialConstructor", function () {
+    return;
+    partialConstructorTest(w(Person).partialConstructor("female"));
+  });
+
   describe("Waterhouse::flip", function () {
     flipTest(w(addThree).flip());
   });
@@ -180,5 +208,6 @@ describe("prototype methods", function () {
   describe("Waterhouse::demethodize", function () {
     demethodizeTest(w([].map).demethodize());
   });
+
 
 });

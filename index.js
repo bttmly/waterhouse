@@ -71,7 +71,7 @@ var wrapToLength = function ( len, fn ) {
 };
 
 var waterhouse = module.exports = function ( fn ) {
-  return wrapToLength( fn.length, function () {
+  return wrapToLength( fn.length, function () {    
     var ret = fn.apply( this, arguments );
     if ( isRegFunc( ret ) ) {
       return waterhouse( ret )
@@ -83,6 +83,9 @@ var waterhouse = module.exports = function ( fn ) {
 var methods = {};
 
 Object.keys( effNoop ).forEach( function ( key ) {
+  
+  if (key === "partialConstructor") return;
+  
   funcProto[key] = waterhouse( effNoop[key] );
 
   methods[key] = function ( fn ) {
@@ -91,6 +94,9 @@ Object.keys( effNoop ).forEach( function ( key ) {
       args[i - 1] = arguments[i];
     }
     var w = waterhouse( fn );
+
+
+
     return w[key].apply( w, args );
   };
 
